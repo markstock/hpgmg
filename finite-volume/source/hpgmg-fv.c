@@ -49,7 +49,8 @@
 //------------------------------------------------------------------------------------------------------------------------------
 void bench_hpgmg(mg_type *all_grids, int onLevel, double a, double b, double rtol){
      int     doTiming;
-     int    minSolves = 10; // do at least minSolves MGSolves
+     int    minSolves = 5; // do at least minSolves MGSolves
+     int    maxSolves = 100; // do at most maxSolves MGSolves
   double timePerSolve = 0;
 
   for(doTiming=0;doTiming<=1;doTiming++){ // first pass warms up, second pass times
@@ -59,10 +60,11 @@ void bench_hpgmg(mg_type *all_grids, int onLevel, double a, double b, double rto
     #endif
 
     #ifdef USE_MPI
-    double minTime   = 60.0; // minimum time in seconds that the benchmark should run
+    double minTime   = 20.0; // minimum time in seconds that the benchmark should run
     double startTime = MPI_Wtime();
     if(doTiming==1){
       if((minTime/timePerSolve)>minSolves)minSolves=(minTime/timePerSolve); // if one needs to do more than minSolves to run for minTime, change minSolves
+      if(minSolves>maxSolves)minSolves=maxSolves; // cap it
     }
     #endif
 

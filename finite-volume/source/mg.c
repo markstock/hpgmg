@@ -1240,6 +1240,7 @@ void FMGSolve(mg_type *all_grids, int onLevel, int u_id, int F_id, double a, dou
   all_grids->MGSolves_performed++;
   if(!all_grids->levels[onLevel]->active)return;
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  const int verbose = 0;
   #ifdef UNLIMIT_FMG_ITERATIONS
   int maxVCycles=20;
   #else
@@ -1255,7 +1256,7 @@ void FMGSolve(mg_type *all_grids, int onLevel, int u_id, int F_id, double a, dou
   #elif USE_MPI
   double FMG_Start_Time = MPI_Wtime();
   #endif
-  if(all_grids->levels[onLevel]->my_rank==0){fprintf(stdout,"FMGSolve... ");}
+  if(all_grids->levels[onLevel]->my_rank==0 && verbose){fprintf(stdout,"FMGSolve... ");}
   double _timeStartMGSolve = getTime();
 
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -1324,8 +1325,10 @@ void FMGSolve(mg_type *all_grids, int onLevel, int u_id, int F_id, double a, dou
     all_grids->levels[level]->timers.Total += (double)(_timeNorm-_timeStart);
     if(all_grids->levels[level]->my_rank==0){
       double rel = norm_of_residual/norm_of_F;
+      if (verbose) {
       if(  v>=0){fprintf(stdout,"\n            v-cycle=%2d  norm=%1.15e  rel=%1.15e  ",v+1,norm_of_residual,rel);}
             else{fprintf(stdout,              "f-cycle     norm=%1.15e  rel=%1.15e  ",norm_of_residual,rel);}
+      }
     }
     if(norm_of_residual/norm_of_F < rtol)break;
   }
@@ -1334,6 +1337,7 @@ void FMGSolve(mg_type *all_grids, int onLevel, int u_id, int F_id, double a, dou
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
   all_grids->timers.MGSolve += (double)(getTime()-_timeStartMGSolve);
   //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  if (verbose) {
   #ifdef _OPENMP
   if(all_grids->levels[onLevel]->my_rank==0){fprintf(stdout,"done (%f seconds)\n",omp_get_wtime()-FMG_Start_Time);} // used to monitor variability in individual solve times
   #elif USE_MPI
@@ -1341,6 +1345,7 @@ void FMGSolve(mg_type *all_grids, int onLevel, int u_id, int F_id, double a, dou
   #else
   if(all_grids->levels[onLevel]->my_rank==0){fprintf(stdout,"done\n");}
   #endif
+  }
 }
 
 
