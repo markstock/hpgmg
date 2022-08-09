@@ -1,0 +1,41 @@
+git clone https://github.com/hpgmg/hpgmg.git
+cd hpgmg
+module load mpi
+which mpicc
+/usr/lib64/openmpi/bin/mpicc
+mpicc --version
+gcc (GCC) 9.3.1 20200408 (Red Hat 9.3.1-2)
+
+# do not make a build dir, this will do that
+./configure --CC=/usr/lib64/openmpi/bin/mpicc --CFLAGS=-fopenmp
+./configure --CC=/usr/lib64/openmpi/bin/mpicc --CFLAGS="-fopenmp -Ofast -march=native"
+make -j3 -C build
+OMP_NUM_THREADS=4 mpirun -np 1 build/bin/hpgmg-fv 6 6
+# first 6 means domain is 2^6 (64) cells on a side
+OMP_NUM_THREADS=4 mpirun -np 1 build/bin/hpgmg-fv 8 1
+# this is a 256^3 run and uses 1 GB of RAM
+
+# rebuild with
+make -C build clean
+make -j3 -C build V=1
+
+# on zen0
+./configure --CC=/opt/openmpi/3.1.6/bin/mpicc --CFLAGS="-fopenmp -Ofast -march=native"
+make -j3 -C build V=1
+OMP_NUM_THREADS=16 mpirun -np 1 build/bin/hpgmg-fv 8 1
+
+These 1-rank jobs seem to always just use 2 threads, no matter what I request
+8-rank job used 4 threads per rank - WTF?
+
+# this should run in 0.05 sec or better (one core)
+OMP_NUM_THREADS=1 build/bin/hpgmg-fv 7 1
+# and this is effectively the same thing
+OMP_NUM_THREADS=1 build/bin/hpgmg-fv 6 8
+
+
+OMP_NUM_THREADS=1 build/bin/hpgmg-fv 7 1 > out_n1_71
+OMP_NUM_THREADS=1 build/bin/hpgmg-fv 6 8 > out_n1_68
+meld out_n1_71 out_n1_68
+
+OMP_NUM_THREADS=1 mpirun -np 8 build/bin/hpgmg-fv 6 1 > out_n8_61
+OMP_NUM_THREADS=1 mpirun -np 8 build/bin/hpgmg-fv 7 1 > out_n8_71
