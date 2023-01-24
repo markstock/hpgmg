@@ -39,3 +39,24 @@ meld out_n1_71 out_n1_68
 
 OMP_NUM_THREADS=1 mpirun -np 8 build/bin/hpgmg-fv 6 1 > out_n8_61
 OMP_NUM_THREADS=1 mpirun -np 8 build/bin/hpgmg-fv 7 1 > out_n8_71
+
+# on pinoak
+module load craype-x86-milan
+./configure --CC=/opt/cray/pe/craype/2.7.17/bin/cc --CFLAGS="-fopenmp -Ofast -march=native"
+make -j3 -C build V=1
+OMP_NUM_THREADS=1 build/bin/hpgmg-fv 7 1 > out_n1_71
+
+
+srun -N1 -n64 --ntasks-per-core=1 -pgriz256 --exclusive ~/opt/xthi/src/xthi_mpi
+srun -N1 -n8 --ntasks-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 7 1
+srun -N1 -n64 --ntasks-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 7 1
+
+srun -N1 -n64 --ntasks-per-core=1 --threads-per-core=1 -pgriz256 --exclusive ~/opt/xthi/src/xthi_mpi
+srun -N1 -n64 --ntasks-per-core=1 --threads-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 7 1
+
+srun -N1 -n1 --cpus-per-task 64 --threads-per-core=1 -pgriz256 --exclusive ~/opt/xthi/src/xthi_mpi_mp
+srun -N1 -n1 --cpus-per-task 64 --threads-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 7 1 > out_N1_n1_t64_71
+
+srun -N1 -n1 --cpus-per-task 1 --threads-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 7 1 > out_N1_n1_t1_71
+srun -N1 -n1 --cpus-per-task 8 --threads-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 8 1 > out_N1_n1_t8_81
+srun -N1 -n1 --cpus-per-task 64 --threads-per-core=1 -pgriz256 --exclusive build/bin/hpgmg-fv 9 1 > out_N1_n1_t64_91
